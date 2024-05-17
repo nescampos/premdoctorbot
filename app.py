@@ -2,10 +2,9 @@ import streamlit as st
 import os
 from streamlit.components.v1 import html
 from typing import List
-from langchain_community.llms import HuggingFaceEndpoint
-from langchain.chains import LLMChain
-from langchain import PromptTemplate
+import replicate
 from PIL import Image
+from transformers import AutoTokenizer
 
 # Configuration of the app : PremAI
 os.environ['REPLICATE_API_TOKEN'] = st.secrets["REPLICATE_API_TOKEN"]
@@ -17,6 +16,28 @@ if max_tokens == None:
 
 # Loading the model
 model_id = "snowflake/snowflake-arctic-instruct"
+
+@st.cache_resource(show_spinner=False)
+def get_tokenizer():
+    """Get a tokenizer to make sure we're not sending too much text
+    text to the Model. Eventually we will replace this with ArcticTokenizer
+    """
+    return AutoTokenizer.from_pretrained("huggyllama/llama-7b")
+
+def get_num_tokens(prompt):
+    """Get the number of tokens in a given prompt"""
+    tokenizer = get_tokenizer()
+    tokens = tokenizer.tokenize(prompt)
+    return len(tokens)
+
+def generate_arctic_response(question):
+  if get_num_tokens(question) >= max_tokens:
+    st.error("Conversation length too long. Please keep it under 3072 tokens.")
+    st.button('Clear chat history', on_click=clear_chat_history, key="clear_chat_history")
+    st.stop()
+
+  for event in replicate.stream(model_id,input={"prompt": prompt_str,"temperature": 0.3,"top_p": 0.9}):
+    return str(event)
 
 
 # Adding UI/UX
@@ -59,14 +80,6 @@ st.markdown("""
 illness = st.text_area("Describe your ailment or disease in detail to help you.", placeholder="Describe your ailment or disease in detail to help you.")
 
 
-def generate_arctic_response(question):
-  if get_num_tokens(question) >= max_tokens:
-    st.error("Conversation length too long. Please keep it under 3072 tokens.")
-    st.button('Clear chat history', on_click=clear_chat_history, key="clear_chat_history")
-    st.stop()
-
-  for event in replicate.stream(model_id,input={"prompt": prompt_str,"temperature": 0.3,"top_p": 0.9}):
-    return str(event)
 
 #if illness:
 if st.button("Ask Prem Doctor"):
