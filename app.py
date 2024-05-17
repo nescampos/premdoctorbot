@@ -65,8 +65,8 @@ def generate_arctic_response(question):
     st.button('Clear chat history', on_click=clear_chat_history, key="clear_chat_history")
     st.stop()
 
-  for event in replicate.stream(model_id,input={"prompt": prompt_str,"temperature": 0.3,"top_p": 0.9,}):
-    yield str(event)
+  for event in replicate.stream(model_id,input={"prompt": prompt_str,"temperature": 0.3,"top_p": 0.9}):
+    return str(event)
 
 #if illness:
 if st.button("Ask Prem Doctor"):
