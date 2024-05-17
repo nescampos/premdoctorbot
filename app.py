@@ -37,7 +37,7 @@ def generate_arctic_response(question):
     st.stop()
 
   for event in replicate.stream(model_id,input={"prompt": question,"temperature": 0.3,"top_p": 0.9}):
-    return str(event)
+    yield str(event)
 
 
 # Adding UI/UX
@@ -92,5 +92,9 @@ if st.button("Ask Prem Doctor"):
   Question: {question}"""
 
   answer = generate_arctic_response(illness)
+  
+  full_response = st.write_stream(answer)
 
-  st.text(f"Answer from Prem Doctor:\n\n{answer}\n\n")
+  st.text(f"Answer from Prem Doctor:\n\n{full_response}\n\n")
+
+  
