@@ -8,19 +8,16 @@ from langchain import PromptTemplate
 from PIL import Image
 
 # Configuration of the app : PremAI
-HUGGINGFACEHUB_API_TOKEN = st.secrets["HUGGINGFACEHUB_API_TOKEN"]
+os.environ['REPLICATE_API_TOKEN'] = st.secrets["REPLICATE_API_TOKEN"]
 max_tokens = st.secrets["max_tokens"]
 
 
 if max_tokens == None:
-    max_tokens = 128
+    max_tokens = 1500
 
 # Loading the model
-repo_id = "Snowflake/snowflake-arctic-instruct"
+model_id = "snowflake/snowflake-arctic-instruct"
 
-llm = HuggingFaceEndpoint(
-    repo_id=repo_id, max_length=max_tokens, temperature=0.5, token=HUGGINGFACEHUB_API_TOKEN
-)
 
 # Adding UI/UX
 image = Image.open('logo.jpg')
@@ -61,6 +58,16 @@ st.markdown("""
 
 illness = st.text_area("Describe your ailment or disease in detail to help you.", placeholder="Describe your ailment or disease in detail to help you.")
 
+
+def generate_arctic_response(question):
+  if get_num_tokens(question) >= max_tokens:
+    st.error("Conversation length too long. Please keep it under 3072 tokens.")
+    st.button('Clear chat history', on_click=clear_chat_history, key="clear_chat_history")
+    st.stop()
+
+  for event in replicate.stream(model_id,input={"prompt": prompt_str,"temperature": 0.3,"top_p": 0.9,}):
+    yield str(event)
+
 #if illness:
 if st.button("Ask Prem Doctor"):
   healthhelper_template = """You are a bot that helps with health problems.
@@ -70,13 +77,7 @@ if st.button("Ask Prem Doctor"):
     Deliver the best result from the information you have available.
     Finally, tell the person that they need to see a real doctor to be sure of their problem and, if possible, what type of doctor they should see.
   Question: {question}"""
-  
-  BOT_PROMPT = PromptTemplate(
-    template=healthhelper_template, input_variables=["question"]
-  )
 
-  qa = LLMChain(llm=llm, prompt=BOT_PROMPT) 
-
-  answer = qa.run(illness)
+  answer = generate_arctic_response(illness)
 
   st.text(f"Answer from Prem Doctor:\n\n{answer}\n\n")
