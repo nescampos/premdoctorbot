@@ -8,7 +8,7 @@ from langchain import PromptTemplate
 from PIL import Image
 
 # Configuration of the app : PremAI
-os.environ["HUGGINGFACEHUB_API_TOKEN"] = st.secrets["HUGGINGFACEHUB_API_TOKEN"]
+HUGGINGFACEHUB_API_TOKEN = st.secrets["HUGGINGFACEHUB_API_TOKEN"]
 max_tokens = st.secrets["max_tokens"]
 
 
