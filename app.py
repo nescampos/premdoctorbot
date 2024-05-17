@@ -32,7 +32,7 @@ def get_num_tokens(prompt):
 
 def generate_arctic_response(question):
   if get_num_tokens(question) >= max_tokens:
-    st.error("Conversation length too long. Please keep it under 3072 tokens.")
+    st.error(f"Conversation length too long. Please keep it under {max_tokens} tokens.")
     st.button('Clear chat history', on_click=clear_chat_history, key="clear_chat_history")
     st.stop()
 
@@ -54,7 +54,7 @@ html_temp = """
 with st.sidebar:
     st.markdown("""
     # About 
-    Prem Doctor is a helper tool built on [LangChain](https://langchain.com) and [Snowflake Arctic](https://huggingface.co/Snowflake/snowflake-arctic-instruct) to analyze, detect and answer people's health questions, without exposing their information to third parties or storing it.
+    Prem Doctor is a helper tool built on [Streamlit Cloud](https://streamlit.io/) and [Snowflake Arctic](https://huggingface.co/Snowflake/snowflake-arctic-instruct) to analyze, detect and answer people's health questions, without exposing their information to third parties or storing it.
     """)
     st.markdown(html_temp.format("rgba(55, 53, 47, 0.16)"),unsafe_allow_html=True)
     st.markdown("""
@@ -92,9 +92,10 @@ if st.button("Ask Prem Doctor"):
   Question: {question}"""
 
   answer = generate_arctic_response(illness)
-  
+
+  st.text(f"Answer from Prem Doctor:\n\n")
   full_response = st.write_stream(answer)
 
-  st.text(f"Answer from Prem Doctor:\n\n{full_response}\n\n")
+  
 
   
